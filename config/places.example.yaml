@@ -1,0 +1,14 @@
+# Saved places per principal. Copy to config/places.yaml (gitignored) — it holds addresses.
+# A principal is a household group id that Jarvis forwards (X-On-Behalf-Of), or a client id
+# from config/clients.yaml (e.g. your own Claude Code key).
+# Convert Jarvis's old file:  uv run mcp-maps import-legacy maps_memory.json --principals dom
+scopes:
+  - principals: [dom, kuba-claude-code]
+    notes:
+      - "The user walks fast: walking legs take about 0.8x the estimated time."
+    places:
+      - aliases: [Home, Dom]
+        address: "ul. Przykładowa 1, Warszawa"
+        preferred_transit_points: [Metro Bemowo]
+      - aliases: [work, praca]
+        address: "ul. Biurowa 2, Warszawa"

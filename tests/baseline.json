@@ -1,0 +1,90 @@
+{
+  "agent": "maps_agent",
+  "tools": [
+    {
+      "name": "get_maps_memory",
+      "description": "get_maps_memory() -> dict\n\nDescription:\nThis tool lists the user's known/favourite places by their ALIAS (e.g. 'Home',\n'work', 'University'). Use these aliases as origin/destination in get_route_details\n— the real street address behind an alias is resolved automatically and is not\nneeded (and not shown) here.",
+      "input_schema": {
+        "properties": {},
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_route_details",
+      "description": "get_route_details(origin: str, destination: str, transport_mode: Literal['driving', 'walking', 'bicycling', 'transit'] = 'transit', transit_mode: Literal['bus', 'subway', 'tram', None] | None = None, departure_time: str | datetime.datetime | None = 'now', show_alternatives: bool | None = True) -> dict\n\nDescription:\nThis tool is used to calculate the route between origin and destination based on the user's preferred\nmode of transport (such as car, transit, etc.) and return the most optimal route to the user.\nUnless specified otherwise one should always assume that both origin and destination are in Warsaw, Poland.\n\nParameters:\nctx : Context\n    Context in which the tool operates\n\norigin: str\n    The starting point of the journey. This can be an alias of a known place\n    (from get_maps_memory, e.g. 'Home'), a specific bus/metro/train stop, or a\n    landmark. Known aliases are resolved to their real address automatically.\n\ndestination: str\n    The end of the journey. This can be an alias of a known place (from\n    get_maps_memory, e.g. 'work'), a specific bus/metro/train stop, or a landmark.\n    Known aliases are resolved to their real address automatically.\n\ntransport_mode: Literal[\"driving\", \"walking\", \"bicycling\", \"transit\"] = 'transit'\n    User's preffered mode of communication such as 'car', 'transit' etc.\n    Note: should remain with defalut value 'transit' unless user specifies otherwise\n\ntransit_mode: Optional[Literal[\"bus\", \"subway\", \"tram\", None]] = None\n    Limits the public transit options to only one specified mode. When left with default value of None\n    the route may consist of any combination of public transport modes such as buses, trams, subways etc.\n    If a given mode is specified the route will be limited to only one mode of public transport.\n    Note: this parameter can only be provided if transport_mode = 'transit'. Otherwise it should remain None\n\ndeparture_time: Optional[Union[str, datetime]] = \"now\"\n    Time at which user wishes to leave. By default is set to 'now'.\n\nshow_alternatives: Optional[bool] = True\n    This parameter controls whether the navigation API returns only one most optimal route\n    or multiple options.\n    When True only one route is returned, otherwise multiple options\n    Note: it sholud remain True unless user specifies otherwise\n\nOutput:\n    This function returns a json file with all of the steps of the most optimal route from origin to destination\n    along with all transfers if necessary. Should an error occurr this function will return a json with the\n    proper error message.\n\nNote:\n    The user is a fast-walker therefore you should assume that all distances that require traveling on foot will\n    be covered in 1.25x faster than the navigation data suggests.",
+      "input_schema": {
+        "properties": {
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "destination": {
+            "title": "Destination",
+            "type": "string"
+          },
+          "transport_mode": {
+            "default": "transit",
+            "enum": [
+              "driving",
+              "walking",
+              "bicycling",
+              "transit"
+            ],
+            "title": "Transport Mode",
+            "type": "string"
+          },
+          "transit_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "bus",
+                  "subway",
+                  "tram",
+                  null
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Transit Mode"
+          },
+          "departure_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "now",
+            "title": "Departure Time"
+          },
+          "show_alternatives": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": true,
+            "title": "Show Alternatives"
+          }
+        },
+        "required": [
+          "origin",
+          "destination"
+        ],
+        "type": "object"
+      }
+    }
+  ]
+}

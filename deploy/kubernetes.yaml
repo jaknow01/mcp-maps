@@ -1,0 +1,45 @@
+# mcp-maps on k3s. Create the Secrets first:
+#   kubectl -n mcp create secret generic mcp-maps-env --from-env-file=.env
+#   kubectl -n mcp create secret generic mcp-maps-clients --from-file=clients.yaml=config/clients.yaml
+#   kubectl -n mcp create secret generic mcp-maps-places --from-file=places.yaml=config/places.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-maps
+  namespace: mcp
+  labels: {app: mcp-maps}
+spec:
+  replicas: 1                      # rate limits/caches are per process
+  selector:
+    matchLabels: {app: mcp-maps}
+  template:
+    metadata:
+      labels: {app: mcp-maps}
+    spec:
+      containers:
+        - name: mcp-maps
+          image: ghcr.io/jaknow01/mcp-maps:v0.1.0
+          args: ["serve"]
+          ports: [{containerPort: 8010, name: http}]
+          envFrom: [{secretRef: {name: mcp-maps-env}}]
+          env: [{name: MCP_CLIENTS_CONFIG, value: /config/clients.yaml}, {name: MCP_PLACES_CONFIG, value: /places/places.yaml}]
+          volumeMounts: [{name: clients, mountPath: /config, readOnly: true}, {name: places, mountPath: /places, readOnly: true}]
+          readinessProbe: {httpGet: {path: /health, port: http}, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /health, port: http}, periodSeconds: 30}
+          resources:
+            requests: {cpu: 20m, memory: 96Mi}
+            limits: {memory: 384Mi}
+      volumes:
+        - name: clients
+          secret: {secretName: mcp-maps-clients}
+        - name: places
+          secret: {secretName: mcp-maps-places}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-maps
+  namespace: mcp
+spec:
+  selector: {app: mcp-maps}
+  ports: [{name: http, port: 80, targetPort: http}]
